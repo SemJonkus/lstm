@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wortvorhersage mit LSTM</title>
+  <link rel="stylesheet" href="style.css">
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.16.0"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-vis"></script>
+</head>
+<body>
+  <main>
+    <h1>Wortvorhersage mit LSTM (Next Word Prediction)</h1>
+
+    <section id="eingabe-bereich">
+      <textarea id="text-eingabe" placeholder="Geben Sie Ihren Text ein..."></textarea>
+      <div id="buttons">
+        <button id="btn-train">Trainieren</button>
+        <button id="btn-vorhersage">Vorhersage</button>
+        <button id="btn-weiter">Weiter</button>
+        <button id="btn-auto">Auto</button>
+        <button id="btn-stop">Stop</button>
+        <button id="btn-reset">Reset</button>
+      </div>
+      <div id="naechste-woerter"></div>
+       </section>
+
+  <section id="training-status">
+  <h2>Training / Performance</h2>
+  <div id="vis-training"></div>
+</section>
+
+<section id="experimente">
+  <h2>Experimente & Fragestellungen</h2>
+
+  <h3>1) Architektur-Experimente</h3>
+  <p>
+    Zu Beginn wurde ein Modell mit nur <b>einer LSTM-Schicht</b> getestet. Die Trainingsgenauigkeit war dabei niedrig und der Loss konvergierte nur langsam.<br>
+    Anschließend wurde das empfohlene Modell mit <b>zwei gestapelten LSTM-Schichten à 100 Units</b> implementiert. Diese Konfiguration führte zu einer besseren Generalisierung, flacherem Loss-Verlauf und höherer Vorhersagequalität.<br>
+    Die finale Architektur basiert daher auf einem <b>Embedding-Layer</b>, zwei gestapelten LSTM-Schichten und einem <b>Softmax-Ausgabe-Layer</b>. Als Optimierer wurde <b>Adam</b> mit einer Lernrate von 0.01 verwendet.<br>
+    Die finale Architektur bietet ein gutes Gleichgewicht zwischen Trainingsdauer, Komplexität und Genauigkeit. Zudem wurden Experimente mit der Epochenzahl durchgeführt. Das System nutzt eine Epochenzahl von <b>60</b>. Während des Testens wurde festgestellt, dass eine höhere Epochenzahl zu einem zu großen Overfitting geführt hat.
+  </p>
+
+  <h3>2) Top-k Accuracy & Perplexity</h3>
+  <div style="background:#f3f6ff;border-radius:8px;padding:12px 18px;margin-bottom:10px;">
+    <b>Top-k Accuracy (Validierungsset):</b>
+    <ul style="margin:8px 0 0 20px;">
+      <li><b>Top-1:</b> 24%</li>
+      <li><b>Top-5:</b> 47%</li>
+      <li><b>Top-10:</b> 59%</li>
+      <li><b>Top-20:</b> 71%</li>
+      <li><b>Top-100:</b> 86%</li>
+    </ul>
+    <div style="margin-top:8px;">
+      <b>Perplexity:</b> ca. 12.7<br>
+      <span style="font-size:0.97em;color:#444;">
+        (Datensatz: Hermann Hesse, Zeitungsartikel, generierte Beispieltexte. Das Modell liefert plausible nächste Wörter, auch wenn es nicht immer exakt das richtige trifft.)
+      </span>
+    </div>
+  </div>
+
+  <h3>3) Trainingsdaten-Rekonstruktion & Datenschutz</h3>
+  <p>
+    Bei einem Test zur Rekonstruktion zeigte sich, dass das Modell in der Lage war, Teile der Trainingsdaten nahezu exakt wiederzugeben – vor allem bei häufig vorkommenden Sätzen.<br>
+    Das deutet darauf hin, dass übermäßiges Training auf sensiblen Textdaten zu einem Datenschutzrisiko führen kann. Besonders wenn personenbezogene Daten im Trainingskorpus enthalten sind, könnten diese theoretisch rekonstruiert werden.<br>
+    Dieses Verhalten unterstreicht die Relevanz von <b>Datensparsamkeit</b> und <b>anonymisierten Trainingsdaten</b> beim Einsatz von LMs. Beispielsweise wurden vorgenerierte Test-Emails in vorherigen Trainingssets 1:1 wiedergegeben. Wenn diese Texte aus echten Kommunikationen stammen würden, könnte das ein großes Datenschutzrisiko darstellen.
+  </p>
+</section>
+
+<section id="diskussion">
+  <h2>Diskussion</h2>
+  <p id="diskussionstext">
+    Beim Training des LSTM-Modells konnte beobachtet werden, dass die Loss-Werte mit zunehmender Epochenzahl deutlich sanken, was auf eine erfolgreiche Anpassung des Modells hinweist.<br>
+    Die Qualität der Wortvorhersagen verbesserte sich merklich, insbesondere bei häufigen Wortfolgen.<br>
+    Bei der <b>„Auto“-Funktion</b> zeigte sich, dass der generierte Text grammatikalisch meist korrekt war, jedoch gelegentlich semantisch nicht sinnvoll. Es gab auch teilweise Wortwiederholungen.<br>
+    Je länger die generierte Wortkette, desto stärker nahm die Kohärenz ab. Besonders herausfordernd war der Umgang mit seltenen Wörtern, da diese im Training seltener vorkamen und schlechter vorhergesagt wurden.<br>
+    Die Top-k-Analyse zeigte, dass das richtige häufige Wort häufig unter den Top-5-Vorschlägen lag, was für eine gute Generalisierung spricht.<br>
+    Overfitting konnte durch Beobachtung des Verlustverlaufs verhindert werden.<br>
+    Insgesamt zeigt das Projekt, wie leistungsfähig LSTM-Netzwerke für die Verarbeitung natürlicher Sprache sind. Die Umsetzung in TensorFlow.js ermöglichte zudem eine direkte Interaktion im Browser, was die Zugänglichkeit erhöht.
+  </p>
+</section>
+
+<section id="dokumentation">
+  <h2>Dokumentation</h2>
+
+  <h3>1) Technisch</h3>
+  <ul>
+    <li><b>TensorFlow.js:</b> Aufbau, Training und Einsatz des LSTM-Modells im Browser.</li>
+    <li><b>TensorFlow.js Vis (tfjs-vis):</b> Grafische Darstellung von Trainingsmetriken (Loss, Accuracy).</li>
+    <li><b>JavaScript/HTML/CSS:</b> Web-Oberfläche, Benutzereingabe, Buttons und Darstellung der Vorhersagen.</li>
+  </ul>
+  <p>
+    Das System ist modular aufgebaut (Datenverarbeitung, Modelltraining, Inferenz, Visualisierung, UI).
+  </p>
+
+  <h3>2) Fachlich</h3>
+  <p>
+    Ziel war die Umsetzung eines autoregressiven Language Models mittels eines gestapelten LSTM-Netzwerks (2 Schichten à 100 Units) zur Vorhersage des nächsten Wortes.<br>
+    Eingabesequenzen wurden mit einer Fensterlänge von 5 Token verarbeitet. Als Loss wurde „categoricalCrossentropy“ und als Optimierer Adam mit Lernrate 0.01 verwendet.<br>
+    Die Daten bestanden aus deutschen Texten (Buchausschnitte, Tagesschau- und Spiegel-Artikel und generierte Diskussionen und Emails).<br>
+    Die Tokenisierung wurde auf Wortebene durchgeführt, wobei Interpunktionszeichen entfernt wurden.<br>
+    Die Interaktion mit dem Nutzer erfolgt über verschiedene Buttons (z. B. für manuelle und automatische Vorhersage).<br>
+    Als Ergebnis entstand ein funktionierendes System zur inkrementellen Textgenerierung im Browser.<br>
+    Das Training des LSTMs fand im Browser statt, wurde visuell dargestellt und endete mit einem Download des Modells.<br>
+    Diese Funktionalität wird ausgeblendet, wenn ein Modell in den Dateien vorhanden ist, was hier der Fall ist.
+  </p>
+</section>
+  </main>
+  <script src="script.js"></script>
+</body>
+</html>
