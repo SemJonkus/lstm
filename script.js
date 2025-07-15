@@ -207,9 +207,9 @@ async function main() {
   const { inputs, labels } = createSequences(tokens);
 
 try {
-  const res = await fetch('mein-lstm-modell.json');
+  const res = await fetch('https://semjonkus.github.io/lstm/mein-lstm-modell.json');
   if (!res.ok) throw new Error("Nicht gefunden");
-  model = await tf.loadLayersModel('mein-lstm-modell.json');
+  model = await tf.loadLayersModel('https://semjonkus.github.io/lstm/mein-lstm-modell.json');
   modelLoaded = true; // <--- HIER
   showStatus("Modell geladen!", 1800);
 } catch (err) {
